@@ -3,95 +3,47 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Browser NLE Editor</title>
+  <title>Creator Scratchpad</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
-  <div class="editor-layout">
-    
-    <div class="top-section">
-      
-      <aside class="media-pool">
-        <h2>Project Media</h2>
-        <label class="upload-btn">
-          + Import Video
-          <input type="file" id="videoUpload" accept="video/*, image/gif">
+
+  <div class="app-container">
+    <header class="toolbar">
+      <div class="tool-group">
+        <button class="tool-btn" data-command="bold"><b>B</b></button>
+        <button class="tool-btn" data-command="italic"><i>I</i></button>
+        <button class="tool-btn" data-command="underline"><u>U</u></button>
+        <button class="tool-btn" data-command="hiliteColor">🖍️ Highlight</button>
+      </div>
+
+      <div class="tool-group">
+        <div class="dropdown">
+          <button class="tool-btn">😀 Emoji</button>
+          <div class="dropdown-content" id="emojiGrid">
+            </div>
+        </div>
+
+        <label class="tool-btn image-btn">
+          🖼️ Image
+          <input type="file" id="imageUpload" accept="image/*">
         </label>
-        <div class="media-list" id="mediaList">
-          <p class="empty-text">Drag files here or click Import.</p>
-        </div>
-      </aside>
-
-      <main class="player-section">
-        <div class="canvas-wrapper">
-          <canvas id="previewCanvas"></canvas>
-          <p class="placeholder-text" id="canvasText">Upload a video to begin</p>
-        </div>
-        <div class="player-controls">
-          <button id="playBtn" class="control-btn">▶ Play</button>
-          <span id="timeDisplay">00:00:00 / 00:00:00</span>
-        </div>
-      </main>
-
-    </div>
-
-    <div class="bottom-section">
-      
-      <div class="timeline-header">
-        <div class="timeline-tools">
-          <button class="tool-btn">✂ Split (S)</button>
-          <button class="tool-btn">🗑 Delete</button>
-        </div>
-        <div class="export-tools">
-          <button class="export-btn" id="exportBtn">Export MP4</button>
-        </div>
       </div>
 
-      <div class="timeline-container">
-        
-        <div class="time-ruler">
-          <div class="playhead" id="playhead">
-            <div class="playhead-triangle"></div>
-            <div class="playhead-line"></div>
-          </div>
-        </div>
-        
-        <div class="tracks-area" id="tracksArea">
-          
-          <div class="track video-track">
-            <div class="track-header">🎬 V1</div>
-            <div class="track-content">
-              <div class="clip video-clip" style="width: 300px; left: 50px;">
-                <span class="clip-name">Main_Footage.mp4</span>
-                <div class="handle left-handle"></div>
-                <div class="handle right-handle"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="track overlay-track">
-            <div class="track-header">🖼️ V2</div>
-            <div class="track-content">
-               <div class="clip overlay-clip" style="width: 120px; left: 100px;">
-                <span class="clip-name">Funny.gif</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="track audio-track">
-            <div class="track-header">🎵 A1</div>
-            <div class="track-content">
-               <div class="clip audio-clip" style="width: 400px; left: 50px;">
-                <span class="clip-name">Background_Music.mp3</span>
-              </div>
-            </div>
-          </div>
-
-        </div>
+      <div class="tool-group">
+        <button id="exportPdfBtn" class="export-btn">💾 Save PDF</button>
       </div>
-    </div>
+    </header>
+
+    <main class="workspace">
+      <div id="editor" class="paper" contenteditable="true">
+        <h1>Untitled Workspace</h1>
+        <p>Start typing your ideas here...</p>
+      </div>
+    </main>
   </div>
-  
+
   <script src="editor.js"></script>
 </body>
 </html>
