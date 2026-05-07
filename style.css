@@ -1,76 +1,188 @@
+/* ==========================================
+   1. CORE RESET & VARIABLES
+   ========================================== */
+:root {
+  /* Notion-inspired color palette */
+  --bg-sidebar: #f7f6f3;
+  --bg-workspace: #ffffff;
+  --text-main: #37352f;
+  --text-muted: #787774;
+  --border: #e9e9e7;
+  --hover-bg: #efedea;
+  --active-bg: #e1dfdd;
+  --accent-blue: #2383e2;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Default system font matching Notion */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
 }
 
 body {
-  background-color: #f4f4f5;
-  color: #18181b;
+  background-color: var(--bg-workspace);
+  color: var(--text-main);
   height: 100vh;
-  overflow: hidden;
+  overflow: hidden; /* Prevents whole-page scrolling */
 }
 
-.app-container {
+.app-layout {
   display: flex;
-  flex-direction: column;
   height: 100%;
 }
 
-/* --- TOOLBAR --- */
+/* ==========================================
+   2. SIDEBAR (Page Management)
+   ========================================== */
+.sidebar {
+  width: 260px;
+  background-color: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  transition: width 0.2s ease;
+}
+
+.sidebar-header {
+  padding: 16px;
+}
+
+.sidebar-header h2 {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.new-entry-btn {
+  margin: 0 16px 16px 16px;
+  padding: 8px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-main);
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.new-entry-btn:hover {
+  background-color: var(--hover-bg);
+}
+
+.entries-list-container {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.entries-list {
+  list-style: none;
+}
+
+.entry-item {
+  padding: 8px 16px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* Adds '...' if title is too long */
+  transition: background 0.2s;
+}
+
+.entry-item:hover {
+  background-color: var(--hover-bg);
+}
+
+.entry-item.active {
+  background-color: var(--active-bg);
+  font-weight: 600;
+}
+
+/* ==========================================
+   3. TOOLBAR (Formatting & Tools)
+   ========================================== */
+.main-workspace {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* Fixes flexbox text overflow issues */
+}
+
 .toolbar {
   display: flex;
-  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
   align-items: center;
   padding: 12px 24px;
-  background-color: #ffffff;
-  border-bottom: 1px solid #e4e4e7;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  background-color: var(--bg-workspace);
+  border-bottom: 1px solid var(--border);
   z-index: 10;
 }
 
 .tool-group {
   display: flex;
-  gap: 8px;
   align-items: center;
+  gap: 4px;
+  padding-right: 16px;
+  border-right: 1px solid var(--border);
 }
 
-.tool-btn {
+.tool-group:last-child {
+  border-right: none;
+  margin-left: auto; /* Pushes the export button to the far right */
+}
+
+.tool-btn, .custom-btn {
   background: transparent;
-  border: 1px solid transparent;
-  padding: 8px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  color: #3f3f46;
-  transition: all 0.2s;
-}
-
-.tool-btn:hover {
-  background-color: #f4f4f5;
-  border-color: #e4e4e7;
-}
-
-.image-btn input {
-  display: none;
-}
-
-.export-btn {
-  background-color: #18181b;
-  color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
+  padding: 6px 10px;
+  border-radius: 4px;
   cursor: pointer;
-  font-weight: 600;
+  color: var(--text-main);
+  font-size: 1rem;
+  transition: background 0.2s;
 }
 
-.export-btn:hover {
-  background-color: #27272a;
+.tool-btn:hover, .custom-btn:hover {
+  background-color: var(--hover-bg);
 }
 
-/* --- EMOJI DROPDOWN --- */
+.tool-select {
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: white;
+  color: var(--text-main);
+  cursor: pointer;
+}
+
+/* Color Pickers */
+.color-picker-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.color-picker-label:hover {
+  background-color: var(--hover-bg);
+}
+
+.color-picker-label input[type="color"] {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* Emoji Dropdown */
 .dropdown {
   position: relative;
   display: inline-block;
@@ -79,54 +191,167 @@ body {
 .dropdown-content {
   display: none;
   position: absolute;
-  background-color: #ffffff;
-  min-width: 200px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  top: 100%;
+  left: 0;
+  background-color: white;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 10px;
-  z-index: 20;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
+  padding: 12px;
+  z-index: 100;
+  width: max-content;
+  max-width: 280px;
 }
 
 .dropdown:hover .dropdown-content {
-  display: grid; /* Show on hover */
+  display: flex; /* Show on hover */
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .emoji-item {
   cursor: pointer;
   font-size: 1.5rem;
-  text-align: center;
   padding: 4px;
   border-radius: 4px;
+  transition: transform 0.1s, background 0.2s;
 }
 
 .emoji-item:hover {
-  background-color: #f4f4f5;
+  background-color: var(--hover-bg);
+  transform: scale(1.2);
 }
 
-/* --- THE WORKSPACE & PAPER --- */
-.workspace {
+.image-btn input {
+  display: none; /* Hides the ugly default file button */
+}
+
+/* Export Button */
+.export-btn {
+  background-color: var(--text-main);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.export-btn:hover {
+  opacity: 0.8;
+}
+
+/* ==========================================
+   4. THE WRITING PAGE (Editor)
+   ========================================== */
+.editor-scroll-area {
   flex: 1;
   overflow-y: auto;
-  padding: 40px 20px;
+  padding: 60px 0;
   display: flex;
   justify-content: center;
 }
 
 .paper {
-  background-color: #ffffff;
   width: 100%;
-  max-width: 800px;
-  min-height: 1056px; /* Standard 8.5x11 aspect ratio minimum */
-  padding: 80px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-  border-radius: 4px;
-  outline: none; /* Removes the ugly blue border when typing */
-  font-size: 1.1rem;
-  line-height: 1.6;
+  max-width: 900px; /* Gives plenty of room to write */
+  padding: 0 60px 80px 60px;
 }
 
-.paper h1 { font-size: 2.5rem; margin-bottom: 20px; outline: none; }
-.paper p { margin-bottom: 16px; outline: none; }
-.paper img { max-width: 100%; height: auto; border-radius: 8px; margin: 16px 0; display: block; }
+.entry-title-input {
+  width: 100%;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--text-main);
+  background: transparent;
+  border: none;
+  outline: none;
+  margin-bottom: 24px;
+  font-family: inherit; /* Matches your selected font */
+}
+
+.entry-title-input::placeholder {
+  color: #caced3; /* Faded placeholder color */
+}
+
+/* The actual text area */
+.editor-body {
+  min-height: 50vh;
+  outline: none; /* Removes blue focus ring */
+  font-size: 1.1rem;
+  line-height: 1.7;
+}
+
+/* ==========================================
+   5. EDITOR FORMATTING RULES
+   ========================================== */
+.editor-body p { margin-bottom: 1em; }
+
+.editor-body h1 {
+  font-size: 1.875em;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  font-weight: 600;
+}
+
+.editor-body h2 {
+  font-size: 1.5em;
+  margin-top: 1.4em;
+  margin-bottom: 0.5em;
+  font-weight: 600;
+}
+
+.editor-body ul, .editor-body ol {
+  margin-bottom: 1em;
+  padding-left: 1.5em;
+}
+
+.editor-body li {
+  margin-bottom: 0.3em;
+}
+
+.editor-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  margin: 1.5em 0;
+  display: block; /* Ensures images don't wrap weirdly with text */
+}
+
+/* Custom Toggle List Styling */
+.editor-body details {
+  margin-bottom: 1em;
+  background-color: var(--bg-sidebar);
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.editor-body summary {
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  list-style: none; /* Hides default arrow in some browsers */
+}
+
+.editor-body summary::-webkit-details-marker {
+  display: none; /* Hides default arrow in Safari/Chrome */
+}
+
+.editor-body summary::before {
+  content: "▶ ";
+  font-size: 0.8em;
+  color: var(--text-muted);
+  display: inline-block;
+  transition: transform 0.2s;
+}
+
+.editor-body details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.editor-body details > div {
+  padding-top: 12px;
+  padding-left: 16px;
+}
