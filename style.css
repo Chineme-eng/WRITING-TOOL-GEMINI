@@ -1,8 +1,8 @@
 /* ==========================================
-   1. CORE RESET & VARIABLES
+   1. CORE THEMES & VARIABLES
    ========================================== */
-:root {
-  /* Notion-inspired color palette */
+/* Light Mode (Default) */
+:root[data-theme="light"] {
   --bg-sidebar: #f7f6f3;
   --bg-workspace: #ffffff;
   --text-main: #37352f;
@@ -10,22 +10,38 @@
   --border: #e9e9e7;
   --hover-bg: #efedea;
   --active-bg: #e1dfdd;
-  --accent-blue: #2383e2;
+  --btn-bg: transparent;
+  --quote-border: #37352f;
+  --code-bg: #f7f6f3;
+}
+
+/* Dark Mode */
+:root[data-theme="dark"] {
+  --bg-sidebar: #202020;
+  --bg-workspace: #191919;
+  --text-main: #d4d4d4;
+  --text-muted: #9e9e9e;
+  --border: #333333;
+  --hover-bg: #2d2d2d;
+  --active-bg: #3f3f3f;
+  --btn-bg: transparent;
+  --quote-border: #d4d4d4;
+  --code-bg: #2d2d2d;
 }
 
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  /* Default system font matching Notion */
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
 }
 
 body {
   background-color: var(--bg-workspace);
   color: var(--text-main);
   height: 100vh;
-  overflow: hidden; /* Prevents whole-page scrolling */
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  transition: background-color 0.3s, color 0.3s;
 }
 
 .app-layout {
@@ -34,7 +50,7 @@ body {
 }
 
 /* ==========================================
-   2. SIDEBAR (Page Management)
+   2. SIDEBAR
    ========================================== */
 .sidebar {
   width: 260px;
@@ -42,11 +58,14 @@ body {
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  transition: width 0.2s ease;
+  transition: background-color 0.3s, border-color 0.3s;
 }
 
 .sidebar-header {
   padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .sidebar-header h2 {
@@ -59,7 +78,7 @@ body {
 .new-entry-btn {
   margin: 0 16px 16px 16px;
   padding: 8px;
-  background: transparent;
+  background: var(--btn-bg);
   border: 1px solid var(--border);
   border-radius: 4px;
   color: var(--text-main);
@@ -69,18 +88,10 @@ body {
   transition: background 0.2s;
 }
 
-.new-entry-btn:hover {
-  background-color: var(--hover-bg);
-}
+.new-entry-btn:hover { background-color: var(--hover-bg); }
 
-.entries-list-container {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.entries-list {
-  list-style: none;
-}
+.entries-list-container { flex: 1; overflow-y: auto; }
+.entries-list { list-style: none; padding-bottom: 20px;}
 
 .entry-item {
   padding: 8px 16px;
@@ -88,55 +99,46 @@ body {
   cursor: pointer;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis; /* Adds '...' if title is too long */
+  text-overflow: ellipsis;
   transition: background 0.2s;
 }
 
-.entry-item:hover {
-  background-color: var(--hover-bg);
-}
-
-.entry-item.active {
-  background-color: var(--active-bg);
-  font-weight: 600;
-}
+.entry-item:hover { background-color: var(--hover-bg); }
+.entry-item.active { background-color: var(--active-bg); font-weight: 600; }
 
 /* ==========================================
-   3. TOOLBAR (Formatting & Tools)
+   3. TOOLBAR
    ========================================== */
 .main-workspace {
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-width: 0; /* Fixes flexbox text overflow issues */
+  min-width: 0;
 }
 
 .toolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 12px;
   align-items: center;
   padding: 12px 24px;
   background-color: var(--bg-workspace);
   border-bottom: 1px solid var(--border);
   z-index: 10;
+  transition: background-color 0.3s, border-color 0.3s;
 }
 
 .tool-group {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding-right: 16px;
+  padding-right: 12px;
   border-right: 1px solid var(--border);
 }
+.tool-group:last-child { border-right: none; margin-left: auto; }
 
-.tool-group:last-child {
-  border-right: none;
-  margin-left: auto; /* Pushes the export button to the far right */
-}
-
-.tool-btn, .custom-btn {
-  background: transparent;
+.tool-btn, .custom-btn, .icon-btn {
+  background: var(--btn-bg);
   border: none;
   padding: 6px 10px;
   border-radius: 4px;
@@ -146,7 +148,7 @@ body {
   transition: background 0.2s;
 }
 
-.tool-btn:hover, .custom-btn:hover {
+.tool-btn:hover, .custom-btn:hover, .icon-btn:hover {
   background-color: var(--hover-bg);
 }
 
@@ -154,96 +156,53 @@ body {
   padding: 6px;
   border: 1px solid var(--border);
   border-radius: 4px;
-  background: white;
+  background: var(--bg-workspace);
   color: var(--text-main);
   cursor: pointer;
 }
 
-/* Color Pickers */
+/* Pickers & Dropdowns */
 .color-picker-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  cursor: pointer;
+  display: flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 4px; cursor: pointer;
 }
+.color-picker-label:hover { background-color: var(--hover-bg); }
+.color-picker-label input[type="color"] { width: 24px; height: 24px; border: none; border-radius: 4px; cursor: pointer; padding: 0; background: none;}
 
-.color-picker-label:hover {
-  background-color: var(--hover-bg);
-}
-
-.color-picker-label input[type="color"] {
-  width: 24px;
-  height: 24px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  padding: 0;
-}
-
-/* Emoji Dropdown */
-.dropdown {
-  position: relative;
-  display: inline-block;
-}
-
+.dropdown { position: relative; display: inline-block; }
 .dropdown-content {
   display: none;
   position: absolute;
   top: 100%;
   left: 0;
-  background-color: white;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  background-color: var(--bg-workspace);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 12px;
   z-index: 100;
-  width: max-content;
-  max-width: 280px;
+  width: 260px;
 }
+.dropdown:hover .dropdown-content { display: flex; flex-wrap: wrap; gap: 8px; }
 
-.dropdown:hover .dropdown-content {
-  display: flex; /* Show on hover */
-  flex-wrap: wrap;
-  gap: 8px;
-}
+.emoji-item { cursor: pointer; font-size: 1.5rem; padding: 4px; border-radius: 4px; transition: transform 0.1s; }
+.emoji-item:hover { background-color: var(--hover-bg); transform: scale(1.2); }
 
-.emoji-item {
-  cursor: pointer;
-  font-size: 1.5rem;
-  padding: 4px;
-  border-radius: 4px;
-  transition: transform 0.1s, background 0.2s;
-}
+.image-btn input { display: none; }
 
-.emoji-item:hover {
-  background-color: var(--hover-bg);
-  transform: scale(1.2);
-}
-
-.image-btn input {
-  display: none; /* Hides the ugly default file button */
-}
-
-/* Export Button */
 .export-btn {
   background-color: var(--text-main);
-  color: white;
+  color: var(--bg-workspace);
   border: none;
   padding: 8px 16px;
   border-radius: 4px;
   font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: background-color 0.3s, color 0.3s;
 }
-
-.export-btn:hover {
-  opacity: 0.8;
-}
+.export-btn:hover { opacity: 0.8; }
 
 /* ==========================================
-   4. THE WRITING PAGE (Editor)
+   4. WRITING PAGE
    ========================================== */
 .editor-scroll-area {
   flex: 1;
@@ -255,7 +214,7 @@ body {
 
 .paper {
   width: 100%;
-  max-width: 900px; /* Gives plenty of room to write */
+  max-width: 900px;
   padding: 0 60px 80px 60px;
 }
 
@@ -268,58 +227,50 @@ body {
   border: none;
   outline: none;
   margin-bottom: 24px;
-  font-family: inherit; /* Matches your selected font */
+  font-family: inherit;
 }
+.entry-title-input::placeholder { color: var(--text-muted); opacity: 0.5; }
 
-.entry-title-input::placeholder {
-  color: #caced3; /* Faded placeholder color */
-}
-
-/* The actual text area */
 .editor-body {
   min-height: 50vh;
-  outline: none; /* Removes blue focus ring */
+  outline: none;
   font-size: 1.1rem;
   line-height: 1.7;
 }
 
 /* ==========================================
-   5. EDITOR FORMATTING RULES
+   5. RICH BLOCKS & FORMATTING
    ========================================== */
 .editor-body p { margin-bottom: 1em; }
+.editor-body h1 { font-size: 1.875em; margin-top: 1.5em; margin-bottom: 0.5em; font-weight: 600; }
+.editor-body h2 { font-size: 1.5em; margin-top: 1.4em; margin-bottom: 0.5em; font-weight: 600; }
+.editor-body ul, .editor-body ol { margin-bottom: 1em; padding-left: 1.5em; }
+.editor-body li { margin-bottom: 0.3em; }
 
-.editor-body h1 {
-  font-size: 1.875em;
-  margin-top: 1.5em;
-  margin-bottom: 0.5em;
-  font-weight: 600;
-}
-
-.editor-body h2 {
-  font-size: 1.5em;
-  margin-top: 1.4em;
-  margin-bottom: 0.5em;
-  font-weight: 600;
-}
-
-.editor-body ul, .editor-body ol {
-  margin-bottom: 1em;
-  padding-left: 1.5em;
-}
-
-.editor-body li {
-  margin-bottom: 0.3em;
-}
-
-.editor-body img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 6px;
+/* Quotes */
+.editor-body blockquote {
+  border-left: 4px solid var(--quote-border);
   margin: 1.5em 0;
-  display: block; /* Ensures images don't wrap weirdly with text */
+  font-style: italic;
+  color: var(--text-muted);
+  background: var(--bg-sidebar);
+  padding: 12px 16px;
+  border-radius: 0 4px 4px 0;
 }
 
-/* Custom Toggle List Styling */
+/* Code Blocks */
+.editor-body pre {
+  background-color: var(--code-bg);
+  padding: 16px;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 1.5em 0;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.95em;
+  border: 1px solid var(--border);
+}
+
+/* Toggle Lists */
 .editor-body details {
   margin-bottom: 1em;
   background-color: var(--bg-sidebar);
@@ -327,31 +278,61 @@ body {
   border-radius: 6px;
   border: 1px solid var(--border);
 }
-
-.editor-body summary {
-  font-weight: 600;
-  cursor: pointer;
-  outline: none;
-  list-style: none; /* Hides default arrow in some browsers */
-}
-
-.editor-body summary::-webkit-details-marker {
-  display: none; /* Hides default arrow in Safari/Chrome */
-}
-
+.editor-body summary { font-weight: 600; cursor: pointer; outline: none; list-style: none; }
+.editor-body summary::-webkit-details-marker { display: none; }
 .editor-body summary::before {
-  content: "▶ ";
-  font-size: 0.8em;
-  color: var(--text-muted);
+  content: "▶ "; font-size: 0.8em; color: var(--text-muted); display: inline-block; transition: transform 0.2s;
+}
+.editor-body details[open] summary::before { transform: rotate(90deg); }
+.editor-body details > div { padding-top: 12px; padding-left: 16px; }
+
+/* ==========================================
+   6. ADVANCED MEDIA (Images & Galleries)
+   ========================================== */
+/* Wrappers to allow images to sit side-by-side */
+.gallery-row {
+  display: flex;
+  gap: 16px;
+  margin: 1.5em 0;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+}
+
+/* The wrapper that holds the image and the resize handle */
+.resizable-img-wrapper {
+  position: relative;
   display: inline-block;
-  transition: transform 0.2s;
+  max-width: 100%;
+  margin: 1.5em 0;
 }
 
-.editor-body details[open] summary::before {
-  transform: rotate(90deg);
+.gallery-row .resizable-img-wrapper {
+  margin: 0; /* Resets margin when images are inside a gallery */
+  flex: 1;
 }
 
-.editor-body details > div {
-  padding-top: 12px;
-  padding-left: 16px;
+.resizable-img-wrapper img {
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+  display: block;
+  pointer-events: none; /* Stops the browser's default drag-and-drop bug */
+}
+
+/* The invisible drag handle in the bottom right corner */
+.resize-handle {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  background-color: var(--text-main);
+  cursor: se-resize;
+  border-radius: 50% 0 6px 0;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.resizable-img-wrapper:hover .resize-handle {
+  opacity: 1; /* Shows up only when you hover over the image */
 }
