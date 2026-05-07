@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Mini-Notion</title>
+  <title>Mini-Notion V2</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
@@ -14,13 +14,13 @@
     <aside class="sidebar">
       <div class="sidebar-header">
         <h2>📚 Workspace</h2>
+        <button id="themeToggle" class="icon-btn" title="Toggle Dark Mode">🌙</button>
       </div>
       <button id="newEntryBtn" class="new-entry-btn">+ New Entry</button>
       
       <div class="entries-list-container">
         <ul id="entriesList" class="entries-list">
-          <li class="entry-item active" data-id="1">📝 Untitled Entry</li>
-        </ul>
+          </ul>
       </div>
     </aside>
 
@@ -29,14 +29,20 @@
       <header class="toolbar">
         
         <div class="tool-group">
-          <select id="fontFamily" class="tool-select" title="Change Font">
-            <option value="sans-serif">Sans-Serif</option>
-            <option value="serif">Serif</option>
-            <option value="monospace">Monospace</option>
+          <button class="tool-btn" id="saveBtn" title="Force Save to Browser">💾 Save</button>
+          <button class="tool-btn icon-btn" id="undoBtn" title="Undo">↩️</button>
+          <button class="tool-btn icon-btn" id="redoBtn" title="Redo">↪️</button>
+        </div>
+
+        <div class="tool-group">
+          <select id="fontFamily" class="tool-select" title="Font Style">
+            <option value="Arial, sans-serif">Sans-Serif</option>
+            <option value="Georgia, serif">Serif</option>
+            <option value="'Courier New', monospace">Monospace</option>
           </select>
-          <select id="fontSize" class="tool-select" title="Change Size">
+          <select id="fontSize" class="tool-select" title="Font Size">
             <option value="3">Normal</option>
-            <option value="1">Small</option>
+            <option value="2">Small</option>
             <option value="5">Large</option>
             <option value="7">Huge</option>
           </select>
@@ -58,40 +64,35 @@
           <button class="tool-btn format-btn" data-command="italic" title="Italic"><i>I</i></button>
           <button class="tool-btn format-btn" data-command="underline" title="Underline"><u>U</u></button>
           <button class="tool-btn format-btn" data-command="strikeThrough" title="Strikethrough"><s>S</s></button>
+          <button class="tool-btn format-btn icon-btn" data-command="justifyLeft" title="Align Left">⬅️</button>
+          <button class="tool-btn format-btn icon-btn" data-command="justifyCenter" title="Align Center">↔️</button>
+          <button class="tool-btn format-btn icon-btn" data-command="justifyRight" title="Align Right">➡️</button>
         </div>
 
         <div class="tool-group">
           <button class="tool-btn format-btn" data-command="formatBlock" data-value="H1" title="Heading 1">H1</button>
           <button class="tool-btn format-btn" data-command="formatBlock" data-value="H2" title="Heading 2">H2</button>
-          <button class="tool-btn format-btn" data-command="insertUnorderedList" title="Bullet List">●</button>
-          <button class="tool-btn format-btn" data-command="insertOrderedList" title="Numbered List">1.</button>
-          <button class="tool-btn custom-btn" id="insertToggleBtn" title="Toggle List">▶ Toggle</button>
+          <button class="tool-btn format-btn icon-btn" data-command="insertUnorderedList" title="Bullet List">●</button>
+          <button class="tool-btn format-btn icon-btn" data-command="insertOrderedList" title="Numbered List">1.</button>
+          <button class="tool-btn custom-btn" id="insertToggleBtn" title="Toggle List">▶</button>
+          <button class="tool-btn format-btn icon-btn" data-command="formatBlock" data-value="BLOCKQUOTE" title="Quote">❞</button>
+          <button class="tool-btn format-btn icon-btn" data-command="formatBlock" data-value="PRE" title="Code Block">&lt;/&gt;</button>
         </div>
 
         <div class="tool-group">
           <div class="dropdown">
-            <button class="tool-btn">😀</button>
+            <button class="tool-btn icon-btn" title="Emojis">😀</button>
             <div class="dropdown-content emoji-grid" id="emojiGrid">
-              <span class="emoji-item">😀</span><span class="emoji-item">😂</span>
-              <span class="emoji-item">🥰</span><span class="emoji-item">😎</span>
-              <span class="emoji-item">🤔</span><span class="emoji-item">😭</span>
-              <span class="emoji-item">😡</span><span class="emoji-item">🤯</span>
-              <span class="emoji-item">🥳</span><span class="emoji-item">😴</span>
-              <span class="emoji-item">🚀</span><span class="emoji-item">⭐</span>
-              <span class="emoji-item">🔥</span><span class="emoji-item">✅</span>
-              <span class="emoji-item">❌</span><span class="emoji-item">📌</span>
-              <span class="emoji-item">💡</span><span class="emoji-item">💻</span>
-              <span class="emoji-item">📈</span><span class="emoji-item">🎨</span>
-            </div>
+              </div>
           </div>
-          <label class="tool-btn image-btn" title="Add Image">
+          <label class="tool-btn image-btn icon-btn" title="Add Image">
             🖼️
             <input type="file" id="imageUpload" accept="image/*">
           </label>
         </div>
 
         <div class="tool-group">
-          <button id="exportPdfBtn" class="export-btn">💾 Export PDF</button>
+          <button id="exportPdfBtn" class="export-btn">📥 PDF</button>
         </div>
 
       </header>
@@ -99,11 +100,9 @@
       <div class="editor-scroll-area">
         <div id="pdfExportWrapper" class="paper">
           
-          <input type="text" id="entryTitle" class="entry-title-input" placeholder="Untitled" value="Untitled Entry">
+          <input type="text" id="entryTitle" class="entry-title-input" placeholder="Untitled Entry" autocomplete="off">
           
-          <div id="editorBody" class="editor-body" contenteditable="true">
-            <p>Start typing your ideas here...</p>
-          </div>
+          <div id="editorBody" class="editor-body" contenteditable="true"></div>
           
         </div>
       </div>
