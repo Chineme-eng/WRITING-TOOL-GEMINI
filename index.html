@@ -2,39 +2,96 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Video Editr</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Browser NLE Editor</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="app-container">
+  <div class="editor-layout">
     
-    <aside class="sidebar">
-      <h1 class="logo">▶ Video Editr</h1>
+    <div class="top-section">
       
-      <div class="tool-section">
-        <label for="videoUpload" class="upload-btn">Upload Video</label>
-        <input type="file" id="videoUpload" accept="video/*" style="display: none;">
-      </div>
+      <aside class="media-pool">
+        <h2>Project Media</h2>
+        <label class="upload-btn">
+          + Import Video
+          <input type="file" id="videoUpload" accept="video/*, image/gif">
+        </label>
+        <div class="media-list" id="mediaList">
+          <p class="empty-text">Drag files here or click Import.</p>
+        </div>
+      </aside>
+
+      <main class="player-section">
+        <div class="canvas-wrapper">
+          <canvas id="previewCanvas"></canvas>
+          <p class="placeholder-text" id="canvasText">Upload a video to begin</p>
+        </div>
+        <div class="player-controls">
+          <button id="playBtn" class="control-btn">▶ Play</button>
+          <span id="timeDisplay">00:00:00 / 00:00:00</span>
+        </div>
+      </main>
+
+    </div>
+
+    <div class="bottom-section">
       
-      <div class="tool-section">
-        <label>Text Overlay</label>
-        <input type="text" id="overlayText" placeholder="Type watermark here...">
-        <input type="color" id="textColor" value="#ffffff" class="color-picker">
+      <div class="timeline-header">
+        <div class="timeline-tools">
+          <button class="tool-btn">✂ Split (S)</button>
+          <button class="tool-btn">🗑 Delete</button>
+        </div>
+        <div class="export-tools">
+          <button class="export-btn" id="exportBtn">Export MP4</button>
+        </div>
       </div>
 
-      <div class="tool-section bottom">
-        <button id="exportBtn" disabled>🔴 Record & Export</button>
-        <p id="statusText">Awaiting video...</p>
+      <div class="timeline-container">
+        
+        <div class="time-ruler">
+          <div class="playhead" id="playhead">
+            <div class="playhead-triangle"></div>
+            <div class="playhead-line"></div>
+          </div>
+        </div>
+        
+        <div class="tracks-area" id="tracksArea">
+          
+          <div class="track video-track">
+            <div class="track-header">🎬 V1</div>
+            <div class="track-content">
+              <div class="clip video-clip" style="width: 300px; left: 50px;">
+                <span class="clip-name">Main_Footage.mp4</span>
+                <div class="handle left-handle"></div>
+                <div class="handle right-handle"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="track overlay-track">
+            <div class="track-header">🖼️ V2</div>
+            <div class="track-content">
+               <div class="clip overlay-clip" style="width: 120px; left: 100px;">
+                <span class="clip-name">Funny.gif</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="track audio-track">
+            <div class="track-header">🎵 A1</div>
+            <div class="track-content">
+               <div class="clip audio-clip" style="width: 400px; left: 50px;">
+                <span class="clip-name">Background_Music.mp3</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
-    </aside>
-
-    <main class="workspace">
-      <canvas id="videoCanvas"></canvas>
-      
-      <video id="sourceVideo" style="display: none;" crossorigin="anonymous"></video>
-    </main>
-
+    </div>
   </div>
+  
   <script src="editor.js"></script>
 </body>
 </html>
