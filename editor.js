@@ -1,26 +1,54 @@
 // ==========================================
-// 1. STATE MANAGEMENT (Local Storage Database)
+// 1. GLOBAL STATE & DOM ELEMENTS
 // ==========================================
+const editorBody = document.getElementById('editorBody');
+const entryTitle = document.getElementById('entryTitle');
+const entriesList = document.getElementById('entriesList');
+
+// Database State
 let entries = JSON.parse(localStorage.getItem('miniNotionEntries')) || [
   { id: Date.now().toString(), title: "Untitled Entry", content: "<p>Start typing your ideas here...</p>" }
 ];
 let currentEntryId = entries[0].id;
 
-// DOM Elements
-const entriesList = document.getElementById('entriesList');
-const newEntryBtn = document.getElementById('newEntryBtn');
-const entryTitle = document.getElementById('entryTitle');
-const editorBody = document.getElementById('editorBody');
+// History State (Undo / Redo)
+let historyStack = [];
+let historyIndex = -1;
+let isNavigatingHistory = false;
 
 // ==========================================
-// 2. SIDEBAR & NAVIGATION LOGIC
+// 2. THEME ENGINE (Light / Dark Mode)
+// ==========================================
+const themeToggle = document.getElementById('themeToggle');
+let currentTheme = localStorage.getItem('miniNotionTheme') || 'light';
+document.documentElement.setAttribute('data-theme', currentTheme);
+updateThemeIcon();
+
+themeToggle.addEventListener('click', () => {
+  currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', currentTheme);
+  localStorage.setItem('miniNotionTheme', currentTheme);
+  updateThemeIcon();
+});
+
+function updateThemeIcon() {
+  themeToggle.innerText = currentTheme === 'light' ? '🌙' : '☀️';
+}
+
+// ==========================================
+// 3. DATABASE & SIDEBAR LOGIC
 // ==========================================
 function saveToDatabase() {
-  localStorage.setItem('miniNotionEntries', JSON.stringify(entries));
+  const entryIndex = entries.findIndex(e => e.id === currentEntryId);
+  if (entryIndex !== -1) {
+    entries[entryIndex].title = entryTitle.value;
+    entries[entryIndex].content = editorBody.innerHTML;
+    localStorage.setItem('miniNotionEntries', JSON.stringify(entries));
+  }
 }
 
 function renderSidebar() {
-  entriesList.innerHTML = ''; // Clear list
+  entriesList.innerHTML = ''; 
   entries.forEach(entry => {
     const li = document.createElement('li');
     li.className = `entry-item ${entry.id === currentEntryId ? 'active' : ''}`;
@@ -31,159 +59,237 @@ function renderSidebar() {
 }
 
 function loadEntry(id) {
-  // Save current work before switching
-  saveCurrentWork(); 
-  
+  saveToDatabase(); // Save current before switching
   currentEntryId = id;
   const entry = entries.find(e => e.id === id);
   
-  // Load data into workspace
   entryTitle.value = entry.title;
   editorBody.innerHTML = entry.content;
   
-  renderSidebar(); // Update active highlight
+  // Reset history for new page
+  historyStack = [];
+  historyIndex = -1;
+  saveHistoryState(); 
+  
+  renderSidebar();
 }
 
-function saveCurrentWork() {
-  const entryIndex = entries.findIndex(e => e.id === currentEntryId);
-  if (entryIndex !== -1) {
-    entries[entryIndex].title = entryTitle.value;
-    entries[entryIndex].content = editorBody.innerHTML;
-    saveToDatabase();
-  }
-}
-
-function createNewEntry() {
+document.getElementById('newEntryBtn').addEventListener('click', () => {
   const newEntry = {
     id: Date.now().toString(),
-    title: "New Entry",
-    content: "<p>Start writing here...</p>"
+    title: "",
+    content: "<p><br></p>"
   };
-  entries.unshift(newEntry); // Add to top of list
+  entries.unshift(newEntry);
   saveToDatabase();
   loadEntry(newEntry.id);
+  entryTitle.focus();
+});
+
+document.getElementById('saveBtn').addEventListener('click', (e) => {
+  saveToDatabase();
+  const btn = e.target;
+  const originalText = btn.innerText;
+  btn.innerText = "✅ Saved!";
+  setTimeout(() => btn.innerText = originalText, 2000);
+});
+
+// Update title dynamically in sidebar
+entryTitle.addEventListener('input', renderSidebar);
+
+// ==========================================
+// 4. UNDO / REDO ENGINE
+// ==========================================
+function saveHistoryState() {
+  if (isNavigatingHistory) return;
+  
+  const currentState = editorBody.innerHTML;
+  // Don't save if it's the exact same as the last state
+  if (historyIndex >= 0 && historyStack[historyIndex] === currentState) return;
+
+  // If we undo'd and then typed, delete the "future" history
+  if (historyIndex < historyStack.length - 1) {
+    historyStack = historyStack.slice(0, historyIndex + 1);
+  }
+
+  historyStack.push(currentState);
+  historyIndex++;
 }
 
-// Auto-save when typing
-entryTitle.addEventListener('input', () => {
-  saveCurrentWork();
-  renderSidebar(); // Update title in sidebar immediately
+document.getElementById('undoBtn').addEventListener('click', () => {
+  if (historyIndex > 0) {
+    isNavigatingHistory = true;
+    historyIndex--;
+    editorBody.innerHTML = historyStack[historyIndex];
+    isNavigatingHistory = false;
+  }
 });
-editorBody.addEventListener('input', saveCurrentWork);
-newEntryBtn.addEventListener('click', createNewEntry);
 
-// Initial Load
-renderSidebar();
-loadEntry(currentEntryId);
+document.getElementById('redoBtn').addEventListener('click', () => {
+  if (historyIndex < historyStack.length - 1) {
+    isNavigatingHistory = true;
+    historyIndex++;
+    editorBody.innerHTML = historyStack[historyIndex];
+    isNavigatingHistory = false;
+  }
+});
+
+// Save history on typing (debounced slightly)
+editorBody.addEventListener('input', () => {
+  clearTimeout(editorBody.historyTimeout);
+  editorBody.historyTimeout = setTimeout(saveHistoryState, 400);
+});
 
 
 // ==========================================
-// 3. CURSOR & FOCUS MANAGEMENT (The Bug Fix)
+// 5. EDITOR BUG FIX & FORMATTING
 // ==========================================
-// This stops buttons from stealing your cursor focus when you click them
+// Prevent toolbar clicks from stealing cursor focus
 const allToolbarButtons = document.querySelectorAll('.tool-btn, .custom-btn, .tool-select, input[type="color"]');
 allToolbarButtons.forEach(el => {
-  el.addEventListener('mousedown', (e) => {
-    e.preventDefault(); // Prevents the editor from losing focus!
-  });
+  el.addEventListener('mousedown', (e) => e.preventDefault());
 });
 
-
-// ==========================================
-// 4. TEXT FORMATTING ENGINE
-// ==========================================
-const formatBtns = document.querySelectorAll('.format-btn');
-formatBtns.forEach(btn => {
+// Core Buttons
+document.querySelectorAll('.format-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const command = btn.getAttribute('data-command');
     const value = btn.getAttribute('data-value') || null;
     document.execCommand(command, false, value);
-    editorBody.focus();
+    saveHistoryState();
   });
 });
 
-// Fonts & Sizes
+// Typography & Colors
 document.getElementById('fontFamily').addEventListener('change', (e) => {
   document.execCommand('fontName', false, e.target.value);
+  saveHistoryState();
 });
 
 document.getElementById('fontSize').addEventListener('change', (e) => {
   document.execCommand('fontSize', false, e.target.value);
+  saveHistoryState();
 });
 
-// Colors
 document.getElementById('textColor').addEventListener('input', (e) => {
   document.execCommand('foreColor', false, e.target.value);
 });
 
 document.getElementById('highlightColor').addEventListener('input', (e) => {
-  // 'hiliteColor' works in most browsers, 'backColor' is a fallback
   document.execCommand('hiliteColor', false, e.target.value); 
   document.execCommand('backColor', false, e.target.value); 
 });
 
-
-// ==========================================
-// 5. RICH MEDIA (Emojis, Images, Toggles)
-// ==========================================
-
-// Emojis
-const emojiItems = document.querySelectorAll('.emoji-item');
-emojiItems.forEach(emoji => {
-  emoji.addEventListener('click', (e) => {
-    document.execCommand('insertText', false, e.target.innerText);
-  });
+// Toggle List (Notion Style)
+document.getElementById('insertToggleBtn').addEventListener('click', () => {
+  const toggleHTML = `<details><summary>Toggle Title</summary><div>Type here...</div></details><p><br></p>`;
+  document.execCommand('insertHTML', false, toggleHTML);
+  saveHistoryState();
 });
 
-// Images
-const imageUpload = document.getElementById('imageUpload');
-imageUpload.addEventListener('change', function(e) {
+
+// ==========================================
+// 6. EMOJIS & MEDIA
+// ==========================================
+const emojiGrid = document.getElementById('emojiGrid');
+const emojis = ['😀','😂','🥰','😎','🤔','😭','😡','🤯','🥳','😴','🚀','⭐','🔥','✅','❌','📌','💡','💻','📈','🎨'];
+
+emojis.forEach(emoji => {
+  const span = document.createElement('span');
+  span.className = 'emoji-item';
+  span.innerText = emoji;
+  span.addEventListener('click', () => {
+    document.execCommand('insertText', false, emoji);
+    saveHistoryState();
+  });
+  emojiGrid.appendChild(span);
+});
+
+// Image Upload & Gallery Wrappers
+document.getElementById('imageUpload').addEventListener('change', function(e) {
   const file = e.target.files[0];
   if (!file) return;
 
   const reader = new FileReader();
   reader.onload = function(event) {
     const imgUrl = event.target.result;
-    document.execCommand('insertImage', false, imgUrl);
-    saveCurrentWork(); // Auto-save after inserting huge image data
+    // We wrap the image in our custom HTML to allow resizing and side-by-side galleries
+    const imgHTML = `
+      <div class="resizable-img-wrapper" style="width: 50%;">
+        <img src="${imgUrl}" alt="Uploaded Image">
+        <div class="resize-handle" contenteditable="false"></div>
+      </div>&nbsp;
+    `;
+    document.execCommand('insertHTML', false, imgHTML);
+    saveHistoryState();
   };
   reader.readAsDataURL(file);
 });
 
-// Custom Toggle List (Notion Style)
-document.getElementById('insertToggleBtn').addEventListener('click', () => {
-  const toggleHTML = `
-    <details>
-      <summary>Toggle Title (Click to rename)</summary>
-      <div>Type hidden content here...</div>
-    </details><p><br></p>
-  `;
-  document.execCommand('insertHTML', false, toggleHTML);
+
+// ==========================================
+// 7. IMAGE RESIZING ENGINE
+// ==========================================
+let isResizing = false;
+let currentImageWrapper = null;
+let startX;
+let startWidth;
+
+editorBody.addEventListener('mousedown', (e) => {
+  if (e.target.classList.contains('resize-handle')) {
+    isResizing = true;
+    currentImageWrapper = e.target.parentElement;
+    startX = e.clientX;
+    startWidth = currentImageWrapper.offsetWidth;
+    e.preventDefault(); // Stop text selection
+  }
+});
+
+document.addEventListener('mousemove', (e) => {
+  if (!isResizing || !currentImageWrapper) return;
+  const newWidth = startWidth + (e.clientX - startX);
+  // Convert to percentage so it stays responsive
+  const parentWidth = editorBody.offsetWidth;
+  const percentage = (newWidth / parentWidth) * 100;
+  
+  if (percentage > 10 && percentage <= 100) {
+    currentImageWrapper.style.width = `${percentage}%`;
+  }
+});
+
+document.addEventListener('mouseup', () => {
+  if (isResizing) {
+    isResizing = false;
+    currentImageWrapper = null;
+    saveHistoryState();
+  }
 });
 
 
 // ==========================================
-// 6. PDF EXPORT ENGINE
+// 8. EXPORT PDF
 // ==========================================
-const exportPdfBtn = document.getElementById('exportPdfBtn');
-
-exportPdfBtn.addEventListener('click', () => {
-  const originalText = exportPdfBtn.innerText;
-  exportPdfBtn.innerText = '⏳ Exporting...';
+document.getElementById('exportPdfBtn').addEventListener('click', () => {
+  const btn = document.getElementById('exportPdfBtn');
+  const originalText = btn.innerText;
+  btn.innerText = '⏳...';
   
-  // Target the wrapper that holds both Title and Body
   const element = document.getElementById('pdfExportWrapper');
   const safeTitle = entryTitle.value.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'entry';
 
   const opt = {
-    margin:       [15, 15, 15, 15],
-    filename:     `MiniNotion_${safeTitle}.pdf`,
+    margin:       15,
+    filename:     `Notes_${safeTitle}.pdf`,
     image:        { type: 'jpeg', quality: 0.98 },
     html2canvas:  { scale: 2, useCORS: true }, 
     jsPDF:        { unit: 'mm', format: 'letter', orientation: 'portrait' }
   };
 
   html2pdf().set(opt).from(element).save().then(() => {
-    exportPdfBtn.innerText = originalText;
+    btn.innerText = originalText;
   });
 });
+
+// Boot up
+renderSidebar();
+loadEntry(currentEntryId);
