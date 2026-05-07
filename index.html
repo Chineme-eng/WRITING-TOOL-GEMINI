@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Video Editr</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    
+    <aside class="sidebar">
+      <h1 class="logo">▶ Video Editr</h1>
+      
+      <div class="tool-section">
+        <label for="videoUpload" class="upload-btn">Upload Video</label>
+        <input type="file" id="videoUpload" accept="video/*" style="display: none;">
+      </div>
+      
+      <div class="tool-section">
+        <label>Text Overlay</label>
+        <input type="text" id="overlayText" placeholder="Type watermark here...">
+        <input type="color" id="textColor" value="#ffffff" class="color-picker">
+      </div>
+
+      <div class="tool-section bottom">
+        <button id="exportBtn" disabled>🔴 Record & Export</button>
+        <p id="statusText">Awaiting video...</p>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <canvas id="videoCanvas"></canvas>
+      
+      <video id="sourceVideo" style="display: none;" crossorigin="anonymous"></video>
+    </main>
+
+  </div>
+  <script src="editor.js"></script>
+</body>
+</html>
