@@ -1,111 +1,294 @@
+/* Core Reset & Fonts */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  user-select: none; /* Prevents text highlighting while dragging clips */
 }
 
 body {
-  background-color: #121212;
-  color: #ffffff;
+  background-color: #0e0e0e;
+  color: #e0e0e0;
   height: 100vh;
-  display: flex;
+  overflow: hidden;
 }
 
-.app-container {
+.editor-layout {
   display: flex;
-  width: 100%;
+  flex-direction: column;
   height: 100%;
 }
 
-/* SIDEBAR */
-.sidebar {
+/* --- TOP HALF (Workspace) --- */
+.top-section {
+  display: flex;
+  flex: 1; /* Takes up all remaining space above timeline */
+  border-bottom: 2px solid #222;
+  overflow: hidden;
+}
+
+/* Media Pool */
+.media-pool {
   width: 280px;
-  background-color: #1e1e1e;
-  border-right: 1px solid #333;
-  padding: 20px;
+  background-color: #181818;
+  border-right: 1px solid #2a2a2a;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
 }
 
-.logo {
-  font-size: 1.2rem;
-  letter-spacing: 1px;
-  color: #e0e0e0;
-}
-
-.tool-section {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-label {
-  font-size: 0.85rem;
-  color: #a0a0a0;
+.media-pool h2 {
+  font-size: 0.9rem;
+  color: #888;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 
-input[type="text"] {
+.upload-btn {
+  background-color: #2563eb;
+  color: white;
   padding: 10px;
-  background: #2a2a2a;
-  border: 1px solid #444;
-  color: white;
-  border-radius: 6px;
-}
-
-.upload-btn, button {
-  background: #2563eb;
-  color: white;
-  padding: 12px;
   text-align: center;
   border-radius: 6px;
   cursor: pointer;
   font-weight: 600;
-  border: none;
+  font-size: 0.9rem;
   transition: background 0.2s;
 }
 
-.upload-btn:hover, button:hover {
-  background: #1d4ed8;
+.upload-btn:hover { background-color: #1d4ed8; }
+.upload-btn input { display: none; } /* Hide the ugly default file input */
+
+.media-list {
+  flex: 1;
+  border: 1px dashed #444;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #121212;
 }
 
-button:disabled {
-  background: #444;
-  color: #888;
-  cursor: not-allowed;
-}
-
-.color-picker {
-  width: 100%;
-  height: 40px;
-  border: none;
-  background: none;
-  cursor: pointer;
-}
-
-#statusText {
-  font-size: 0.8rem;
-  color: #fbbf24;
+.empty-text {
+  color: #555;
+  font-size: 0.85rem;
   text-align: center;
 }
 
-/* WORKSPACE */
-.workspace {
+/* Video Player */
+.player-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #0a0a0a;
+}
+
+.canvas-wrapper {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #0a0a0a;
-  padding: 40px;
+  position: relative;
+  padding: 20px;
 }
 
 canvas {
   max-width: 100%;
   max-height: 100%;
   background-color: #000;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+  border-radius: 4px;
 }
+
+.placeholder-text {
+  position: absolute;
+  color: #555;
+  font-size: 1.2rem;
+  pointer-events: none;
+}
+
+.player-controls {
+  height: 50px;
+  background-color: #141414;
+  border-top: 1px solid #222;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.control-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+#timeDisplay {
+  color: #888;
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+
+/* --- BOTTOM HALF (Timeline) --- */
+.bottom-section {
+  height: 350px; /* Fixed height for the timeline area */
+  background-color: #181818;
+  display: flex;
+  flex-direction: column;
+}
+
+.timeline-header {
+  height: 40px;
+  background-color: #222;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  border-bottom: 1px solid #333;
+}
+
+.tool-btn {
+  background: none;
+  border: none;
+  color: #aaa;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.tool-btn:hover { background-color: #333; color: white; }
+
+.export-btn {
+  background-color: #059669;
+  color: white;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.export-btn:hover { background-color: #047857; }
+
+/* Timeline Tracks Grid */
+.timeline-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+}
+
+.time-ruler {
+  height: 30px;
+  background-color: #1a1a1a;
+  border-bottom: 1px solid #333;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* The Playhead (Red Line) */
+.playhead {
+  position: absolute;
+  left: 150px; /* Start position */
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.playhead-triangle {
+  width: 0; 
+  height: 0; 
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 10px solid #ef4444; /* Red color */
+  position: absolute;
+  top: 0;
+  left: -5px;
+}
+
+.playhead-line {
+  position: absolute;
+  top: 10px;
+  bottom: 0;
+  width: 2px;
+  background-color: #ef4444;
+}
+
+/* Individual Tracks */
+.track {
+  display: flex;
+  height: 60px;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.track-header {
+  width: 80px;
+  background-color: #1e1e1e;
+  border-right: 1px solid #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #888;
+  position: sticky;
+  left: 0;
+  z-index: 5;
+}
+
+.track-content {
+  flex: 1;
+  position: relative;
+  background-color: #141414;
+  overflow: hidden;
+}
+
+/* The Clips (Video/Audio Blocks) */
+.clip {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  font-size: 0.75rem;
+  color: white;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2);
+  cursor: grab;
+}
+
+.clip-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+/* Colors for different media types */
+.video-clip { background-color: #3b82f6; } /* Blue */
+.audio-clip { background-color: #10b981; } /* Green */
+.overlay-clip { background-color: #8b5cf6; } /* Purple */
+
+/* Trimming Handles on the edges of clips */
+.handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  background-color: rgba(255, 255, 255, 0.4);
+  cursor: ew-resize; /* Horizontal resize cursor */
+}
+
+.left-handle { left: 0; border-radius: 4px 0 0 4px; }
+.right-handle { right: 0; border-radius: 0 4px 4px 0; }
+.handle:hover { background-color: white; }
