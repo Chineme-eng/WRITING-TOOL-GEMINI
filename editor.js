@@ -1,100 +1,173 @@
+// ==========================================
+// 1. SELECT DOM ELEMENTS
+// ==========================================
 const videoUpload = document.getElementById('videoUpload');
-const sourceVideo = document.getElementById('sourceVideo');
-const canvas = document.getElementById('videoCanvas');
+const mediaList = document.getElementById('mediaList');
+const canvas = document.getElementById('previewCanvas');
 const ctx = canvas.getContext('2d');
-const overlayText = document.getElementById('overlayText');
-const textColor = document.getElementById('textColor');
+const playBtn = document.getElementById('playBtn');
+const timeDisplay = document.getElementById('timeDisplay');
+const playhead = document.getElementById('playhead');
 const exportBtn = document.getElementById('exportBtn');
-const statusText = document.getElementById('statusText');
+const canvasText = document.getElementById('canvasText');
 
-let animationFrameId;
+// ==========================================
+// 2. GLOBAL STATE
+// ==========================================
+let isPlaying = false;
+let animationId;
+let sourceVideo = document.createElement('video'); // Hidden video player
+let currentTimelineTime = 0; // In seconds
+const timelineMaxSeconds = 30; // 30-second timeline for MVP
+const timelineWidthPixels = 800; // Estimated width of tracks area
 
-// 1. Load the video when user uploads it
+// ==========================================
+// 3. IMPORT MEDIA LOGIC
+// ==========================================
 videoUpload.addEventListener('change', function(e) {
   const file = e.target.files[0];
   if (!file) return;
 
   const fileURL = URL.createObjectURL(file);
   sourceVideo.src = fileURL;
+  sourceVideo.crossOrigin = "anonymous";
+
+  // Update Media Pool UI
+  mediaList.innerHTML = `<div style="padding: 10px; background: #222; border-radius: 4px; font-size: 0.8rem; border-left: 3px solid #3b82f6;">🎬 ${file.name}</div>`;
   
-  // Wait for video metadata to load so we know its size
+  // Hide placeholder text and set canvas size
   sourceVideo.onloadedmetadata = () => {
-    canvas.width = sourceVideo.videoWidth;
-    canvas.height = sourceVideo.videoHeight;
-    exportBtn.disabled = false;
-    statusText.innerText = "Video loaded. Ready to play/record.";
-    drawFrame(); // Draw the first frame
+    canvasText.style.display = 'none';
+    // Scale canvas to fit maintaining aspect ratio (720p base)
+    canvas.width = 1280;
+    canvas.height = 720;
+    drawFrame(); // Draw the very first frame
   };
 });
 
-// 2. The drawing loop: Draw video frame + Text on top
+// ==========================================
+// 4. THE PLAYBACK & CANVAS ENGINE
+// ==========================================
 function drawFrame() {
-  if (sourceVideo.paused || sourceVideo.ended) {
-    // Just draw a static frame if not playing
+  // Clear canvas
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Draw the video if it's ready
+  if (sourceVideo.readyState >= 2) {
     ctx.drawImage(sourceVideo, 0, 0, canvas.width, canvas.height);
-  } else {
-    // Draw playing video
-    ctx.drawImage(sourceVideo, 0, 0, canvas.width, canvas.height);
-    animationFrameId = requestAnimationFrame(drawFrame);
   }
 
-  // Draw the custom text overlay
-  const text = overlayText.value;
-  if (text) {
-    ctx.font = 'bold 48px sans-serif';
-    ctx.fillStyle = textColor.value;
-    ctx.textAlign = 'center';
-    
-    // Adding a slight black shadow so text is visible on light backgrounds
-    ctx.shadowColor = 'rgba(0,0,0,0.8)';
-    ctx.shadowBlur = 10;
-    
-    // Draw text in the bottom center
-    ctx.fillText(text, canvas.width / 2, canvas.height - 50);
-    
-    // Reset shadow
-    ctx.shadowBlur = 0; 
+  // Update time display (00:00)
+  const formatTime = (time) => new Date(time * 1000).toISOString().substring(14, 19);
+  timeDisplay.innerText = `${formatTime(sourceVideo.currentTime)} / ${formatTime(sourceVideo.duration || 0)}`;
+
+  // Move the playhead visually
+  if (sourceVideo.duration) {
+    const progress = sourceVideo.currentTime / sourceVideo.duration;
+    // Move playhead across the screen
+    playhead.style.left = `${progress * 100}%`;
+  }
+
+  if (isPlaying) {
+    animationId = requestAnimationFrame(drawFrame);
   }
 }
 
-// Redraw if user types or changes color while paused
-overlayText.addEventListener('input', drawFrame);
-textColor.addEventListener('input', drawFrame);
+playBtn.addEventListener('click', () => {
+  if (!sourceVideo.src) {
+    alert("Please import a video first!");
+    return;
+  }
 
-// 3. The Recording Engine
+  isPlaying = !isPlaying;
+  
+  if (isPlaying) {
+    playBtn.innerText = '⏸ Pause';
+    sourceVideo.play();
+    drawFrame(); // Start the loop
+  } else {
+    playBtn.innerText = '▶ Play';
+    sourceVideo.pause();
+    cancelAnimationFrame(animationId);
+  }
+});
+
+// ==========================================
+// 5. TIMELINE CLIP DRAGGING (UI FEEL)
+// ==========================================
+// This makes the placeholder blocks draggable left and right
+const clips = document.querySelectorAll('.clip');
+
+clips.forEach(clip => {
+  let isDragging = false;
+  let startX;
+  let startLeft;
+
+  clip.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    startX = e.clientX;
+    startLeft = parseInt(window.getComputedStyle(clip).left, 10) || 0;
+    clip.style.cursor = 'grabbing';
+    clip.style.zIndex = 100;
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const dx = e.clientX - startX;
+    clip.style.left = `${startLeft + dx}px`;
+  });
+
+  window.addEventListener('mouseup', () => {
+    if (isDragging) {
+      isDragging = false;
+      clip.style.cursor = 'grab';
+      clip.style.zIndex = 1;
+    }
+  });
+});
+
+// ==========================================
+// 6. EXPORT / RENDER ENGINE
+// ==========================================
 exportBtn.addEventListener('click', () => {
-  statusText.innerText = "🔴 Recording... Please wait.";
-  exportBtn.disabled = true;
+  if (!sourceVideo.src) return alert("Nothing to export!");
 
-  // Set up the MediaRecorder to capture the canvas
-  const stream = canvas.captureStream(30); // 30 FPS
+  exportBtn.innerText = "🔴 Exporting...";
+  exportBtn.style.backgroundColor = "#dc2626"; // Turn red
+
+  // Create a MediaRecorder to capture the Canvas stream at 30fps
+  const stream = canvas.captureStream(30);
   const recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
   const chunks = [];
 
   recorder.ondataavailable = e => chunks.push(e.data);
   
   recorder.onstop = () => {
-    // Compile the recorded chunks into a file and download it
     const blob = new Blob(chunks, { type: 'video/webm' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'edited-video.webm';
-    a.click();
+    a.download = 'My_NLE_Export.webm';
+    a.click(); // Trigger download
     
-    statusText.innerText = "✅ Export Complete!";
-    exportBtn.disabled = false;
+    // Reset UI
+    exportBtn.innerText = "Export MP4";
+    exportBtn.style.backgroundColor = "#059669";
   };
 
-  // Start the recording process
+  // Rewind and play to record
+  sourceVideo.currentTime = 0;
+  sourceVideo.play();
+  isPlaying = true;
+  drawFrame();
   recorder.start();
-  sourceVideo.currentTime = 0; // Rewind to start
-  sourceVideo.play();          // Start playing
-  drawFrame();                 // Start the drawing loop
 
-  // Stop recording when the video finishes
+  // Stop recording when the video ends
   sourceVideo.onended = () => {
     recorder.stop();
-    cancelAnimationFrame(animationFrameId);
+    sourceVideo.pause();
+    isPlaying = false;
+    playBtn.innerText = '▶ Play';
   };
 });
